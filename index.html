@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Concours de mèmes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bangers&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ÉCRAN 1 : ACCUEIL -->
+<section id="screen-home" class="screen active">
+  <div class="home-card">
+    <h1>CONCOURS<br><span>DE MÈMES</span></h1>
+    <p class="tagline">4 minutes. Une image. Le mème le plus drôle gagne.</p>
+    <label class="field">
+      <span>Ton pseudo</span>
+      <input id="pseudo" type="text" maxlength="20" placeholder="ex : MemeLord42" autocomplete="off">
+    </label>
+    <button id="btn-create" class="btn btn-primary big">CRÉER UNE PARTIE</button>
+    <div class="joinbox">
+      <input id="room-code" type="text" maxlength="8" placeholder="CODE DE LA SALLE" autocomplete="off">
+      <button id="btn-join" class="btn btn-secondary big">REJOINDRE UNE PARTIE</button>
+    </div>
+    <p class="hint" id="home-hint"></p>
+  </div>
+</section>
+
+<!-- ÉCRAN 2 : CRÉATION DE PARTIE -->
+<section id="screen-create" class="screen">
+  <div class="home-card">
+    <h2>Nouvelle partie</h2>
+    <p class="tagline">Choisis l'image de référence du concours.</p>
+    <label class="btn btn-secondary big file-btn">
+      📁 CHOISIR UNE IMAGE
+      <input id="file-image" type="file" accept="image/*" hidden>
+    </label>
+    <div id="image-preview" class="image-preview empty">Aucune image</div>
+    <p class="hint" id="create-hint"></p>
+    <button id="btn-start" class="btn btn-primary big" disabled>CRÉER LA SALLE</button>
+    <button id="btn-back" class="btn btn-ghost">← Retour</button>
+  </div>
+</section>
+
+<!-- ÉCRAN 4 : ÉDITEUR -->
+<section id="screen-editor" class="screen">
+  <header class="topbar">
+    <div class="left"><div class="who">🎮 <b id="who-name"></b></div><span id="room-chip" class="chipinfo"></span><span id="net-badge" class="badge warn hidden">⚠ Reconnexion…</span></div>
+    <div id="timer" class="timer" aria-live="off">4:00</div>
+    <div class="topbar-right"><button id="btn-to-vote" class="btn btn-secondary hidden">🗳 Aller au vote</button> <span id="state-badge" class="badge">EN COURS</span></div>
+  </header>
+
+  <main class="editor">
+    <!-- Outils à gauche -->
+    <aside class="tools">
+      <div class="panel">
+        <h3>Texte</h3>
+        <button id="btn-add-text" class="btn btn-primary">＋ Ajouter un texte</button>
+        <div class="presets">
+          <button class="chip" data-preset="classic">Classique</button>
+          <button class="chip" data-preset="yellow">Jaune</button>
+          <button class="chip" data-preset="pink">Pop</button>
+          <button class="chip" data-preset="cap">Sous-titre</button>
+        </div>
+        <div id="text-controls" class="disabled">
+          <label class="field"><span>Contenu</span>
+            <textarea id="t-content" rows="2" maxlength="120"></textarea></label>
+          <label class="field"><span>Police</span>
+            <select id="t-font">
+              <option value="Anton">Anton (mème)</option>
+              <option value="Impact">Impact</option>
+              <option value="Bangers">Bangers (BD)</option>
+              <option value="Inter">Inter (sobre)</option>
+            </select></label>
+          <label class="field"><span>Taille <output id="o-size">90</output></span>
+            <input id="t-size" type="range" min="30" max="260" value="90"></label>
+          <div class="row">
+            <label class="field small"><span>Couleur</span><input id="t-color" type="color" value="#ffffff"></label>
+            <label class="field small"><span>Contour</span><input id="t-stroke" type="color" value="#000000"></label>
+          </div>
+          <label class="field"><span>Épaisseur contour <output id="o-sw">8</output></span>
+            <input id="t-sw" type="range" min="0" max="24" value="8"></label>
+          <div class="row">
+            <button class="chip" data-align="left" title="Aligné à gauche">⬅</button>
+            <button class="chip" data-align="center" title="Centré">↔</button>
+            <button class="chip" data-align="right" title="Aligné à droite">➡</button>
+            <button id="t-caps" class="chip" title="Majuscules">AA</button>
+          </div>
+          <button id="btn-del-text" class="btn btn-danger">🗑 Supprimer ce texte</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Image</h3>
+        <label class="field"><span>Zoom <output id="o-zoom">100</output>%</span>
+          <input id="i-zoom" type="range" min="100" max="300" value="100"></label>
+        <label class="field"><span>Position horizontale</span>
+          <input id="i-x" type="range" min="-100" max="100" value="0"></label>
+        <label class="field"><span>Position verticale</span>
+          <input id="i-y" type="range" min="-100" max="100" value="0"></label>
+      </div>
+    </aside>
+
+    <!-- Aperçu au centre -->
+    <div class="stage">
+      <div class="canvas-wrap"><canvas id="canvas" width="1080" height="1920"></canvas></div>
+      <div id="lock-banner" class="lock-banner hidden">
+        <div>⏱ TEMPS ÉCOULÉ ! MONTREZ VOS CRÉATIONS !</div>
+        <small>Exporte ta vidéo maintenant si ce n'est pas fait.</small>
+        <button id="btn-open-vote" class="btn btn-primary hidden">🗳 LANCER LE VOTE POUR TOUS</button>
+        <small id="wait-host" class="hidden">En attente de l'organisateur…</small>
+      </div>
+    </div>
+
+    <!-- Audio + export à droite -->
+    <aside class="tools right">
+      <div class="panel">
+        <h3>Musique</h3>
+        <label class="btn btn-secondary file-btn">🎵 Importer un son
+          <input id="file-audio" type="file" accept="audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/x-m4a,.mp3,.wav,.m4a" hidden>
+        </label>
+        <p class="hint" id="audio-name">Aucun son (export sans musique possible)</p>
+        <div id="audio-ui" class="hidden">
+          <div class="wave-wrap">
+            <canvas id="wave" width="600" height="110"></canvas>
+          </div>
+          <label class="field"><span>Début de l'extrait (glisse le curseur)</span>
+            <input id="a-start" type="range" min="0" max="0" step="0.1" value="0"></label>
+          <div class="times"><span>Début <b id="t-start">0:00.0</b></span><span>Durée <b id="t-len">15 s (fixe)</b></span><span>Fin <b id="t-end">0:00.0</b></span></div>
+          <div class="row">
+            <button id="btn-play" class="btn btn-primary">▶ Écouter</button>
+            <label class="field grow"><span>Volume</span>
+              <input id="a-vol" type="range" min="0" max="100" value="100"></label>
+          </div>
+          <div class="bar"><div id="play-bar"></div></div>
+          <button id="btn-remove-audio" class="btn btn-ghost">Retirer le son</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Export</h3>
+        <button id="btn-export" class="btn btn-primary big">🎬 EXPORTER MON MÈME</button>
+        <div id="export-progress" class="hidden">
+          <div class="bar tall"><div id="export-bar"></div></div>
+          <p class="hint" id="export-msg">Préparation…</p>
+        </div>
+        <a id="btn-download" class="btn btn-secondary big hidden" download>⬇ TÉLÉCHARGER MA VIDÉO</a>
+        <p class="hint" id="export-hint"></p>
+      </div>
+    </aside>
+  </main>
+</section>
+
+<!-- ÉCRAN 3 : SALLE D'ATTENTE -->
+<section id="screen-lobby" class="screen">
+  <div class="home-card">
+    <h2>Salle d'attente</h2>
+    <div class="codebox"><span>CODE</span><b id="lobby-code">-----</b><button id="btn-copy-code" class="chip">Copier</button></div>
+    <div class="row"><input id="lobby-link" type="text" readonly><button id="btn-copy-link" class="chip">Copier le lien</button></div>
+    <div id="lobby-image" class="image-preview"></div>
+    <button id="btn-change-image" class="btn btn-ghost hidden">🖼 Changer l'image</button>
+    <input id="file-image2" type="file" accept="image/*" hidden>
+    <h3>Joueurs (<span id="lobby-count">0</span>)</h3>
+    <ul id="lobby-players" class="plist"></ul>
+    <button id="btn-ready" class="btn btn-secondary big">JE SUIS PRÊT</button>
+    <button id="btn-start-game" class="btn btn-primary big hidden">LANCER LA PARTIE</button>
+    <p id="lobby-wait" class="hint">En attente du lancement par l'organisateur…</p>
+    <button id="btn-leave-lobby" class="btn btn-ghost">← Quitter la salle</button>
+  </div>
+</section>
+
+<!-- ÉCRAN 5 : VOTE -->
+<section id="screen-vote" class="screen">
+  <div class="wide">
+    <header class="vhead">
+      <h2>🗳 À VOS VOTES !</h2>
+      <p class="tagline">Un seul vote, pas pour toi. Regardez les vidéos dans votre groupe WhatsApp/Discord, puis votez ici.</p>
+      <div id="vote-count" class="badge"></div>
+    </header>
+    <div id="vote-grid" class="vgrid"></div>
+    <div class="vfoot">
+      <button id="btn-back-editor" class="btn btn-secondary">← Mon mème / export</button>
+      <button id="btn-close-vote" class="btn btn-primary big hidden">🏁 CLÔTURER LE VOTE</button>
+    </div>
+  </div>
+</section>
+
+<!-- ÉCRAN 6 : RÉSULTAT -->
+<section id="screen-result" class="screen">
+  <canvas id="confetti"></canvas>
+  <div class="home-card">
+    <p class="tagline" id="res-label">LE GAGNANT EST…</p>
+    <h1 id="res-name" class="win">—</h1>
+    <p id="res-votes" class="bigvotes"></p>
+    <div id="res-thumb" class="image-preview"></div>
+    <h3>Classement</h3>
+    <ol id="res-rank" class="rank"></ol>
+    <button id="btn-new-round" class="btn btn-primary big hidden">🔁 NOUVELLE MANCHE</button>
+    <button id="btn-close-room" class="btn btn-danger hidden">Fermer la salle pour tous</button>
+    <button id="btn-leave-result" class="btn btn-ghost">Quitter</button>
+  </div>
+</section>
+
+<div id="toast" class="toast hidden"></div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
